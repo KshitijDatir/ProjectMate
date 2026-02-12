@@ -38,6 +38,10 @@ const joinRequestSchema = new mongoose.Schema(
     decisionAt: {
       type: Date,
     },
+    decisionMessage: {
+  type: String,
+},
+
   },
   { timestamps: true }
 );

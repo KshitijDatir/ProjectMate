@@ -1,0 +1,178 @@
+/* UI/InteractiveCube.css */
+
+.interactive-cube-container {
+  perspective: 1000px;
+  width: 200px;
+  height: 200px;
+  margin: 0 auto;
+  position: relative;
+  user-select: none; /* Prevent text selection during drag */
+  -webkit-user-select: none;
+  touch-action: none; /* Disable browser touch actions */
+}
+
+.cube {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  transform-style: preserve-3d;
+  /* Remove the CSS animation since we're controlling it with JS */
+}
+
+/* ALL YOUR ORIGINAL FACE STYLES - DON'T CHANGE */
+.face {
+  position: absolute;
+  width: 200px;
+  height: 200px;
+  border: 2px solid rgba(59, 130, 246, 0.2);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+}
+
+.face-content {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+/* Grid dots */
+.grid-dot {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background: #3B82F6;
+  border-radius: 50%;
+}
+.grid-dot:nth-child(1) { top: 40px; left: 40px; }
+.grid-dot:nth-child(2) { top: 40px; right: 40px; }
+.grid-dot:nth-child(3) { bottom: 40px; left: 40px; }
+.grid-dot:nth-child(4) { bottom: 40px; right: 40px; }
+
+/* Lines */
+.line-h, .line-v {
+  background: #10B981;
+  position: absolute;
+}
+.line-h { width: 120px; height: 2px; }
+.line-v { width: 2px; height: 120px; }
+
+/* Circle */
+.circle {
+  width: 70px;
+  height: 70px;
+  border: 2px solid #8B5CF6;
+  border-radius: 50%;
+}
+
+/* Square */
+.square {
+  width: 70px;
+  height: 70px;
+  border: 2px solid #F59E0B;
+}
+
+/* Triangle */
+.triangle {
+  width: 0;
+  height: 0;
+  border-left: 35px solid transparent;
+  border-right: 35px solid transparent;
+  border-bottom: 60px solid #EF4444;
+}
+
+/* Hexagon */
+.hexagon {
+  width: 60px;
+  height: 35px;
+  background: #3B82F6;
+  position: relative;
+}
+.hexagon:before, .hexagon:after {
+  content: "";
+  position: absolute;
+  width: 0;
+  border-left: 30px solid transparent;
+  border-right: 30px solid transparent;
+}
+.hexagon:before {
+  bottom: 100%;
+  border-bottom: 15px solid #3B82F6;
+}
+.hexagon:after {
+  top: 100%;
+  border-top: 15px solid #3B82F6;
+}
+
+/* Face positions - EXACT */
+.front { transform: translateZ(100px); }
+.back { transform: translateZ(-100px) rotateY(180deg); }
+.right { transform: rotateY(90deg) translateZ(100px); }
+.left { transform: rotateY(-90deg) translateZ(100px); }
+.top { transform: rotateX(90deg) translateZ(100px); }
+.bottom { transform: rotateX(-90deg) translateZ(100px); }
+
+/* Instruction */
+.cube-instruction {
+  position: absolute;
+  bottom: -40px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 14px;
+  color: #6b7280;
+  opacity: 0.7;
+  transition: opacity 0.3s;
+  pointer-events: none;
+}
+
+.interactive-cube-container:hover .cube-instruction {
+  opacity: 1;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .interactive-cube-container {
+    width: 150px;
+    height: 150px;
+  }
+  .face {
+    width: 150px;
+    height: 150px;
+  }
+  .front { transform: translateZ(75px); }
+  .back { transform: translateZ(-75px) rotateY(180deg); }
+  .right { transform: rotateY(90deg) translateZ(75px); }
+  .left { transform: rotateY(-90deg) translateZ(75px); }
+  .top { transform: rotateX(90deg) translateZ(75px); }
+  .bottom { transform: rotateX(-90deg) translateZ(75px); }
+  
+  .circle {
+    width: 50px;
+    height: 50px;
+  }
+  .square {
+    width: 50px;
+    height: 50px;
+  }
+  .triangle {
+    border-left: 25px solid transparent;
+    border-right: 25px solid transparent;
+    border-bottom: 45px solid #EF4444;
+  }
+  .hexagon {
+    width: 45px;
+    height: 25px;
+  }
+  .hexagon:before,
+  .hexagon:after {
+    border-left: 22.5px solid transparent;
+    border-right: 22.5px solid transparent;
+  }
+}

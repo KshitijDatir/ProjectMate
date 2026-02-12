@@ -23,6 +23,13 @@ const projectSchema = new mongoose.Schema(
       required: true,
     },
 
+    members: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
+
     requiredSkills: [
       {
         type: String,

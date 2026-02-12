@@ -1,5 +1,7 @@
 const express = require("express");
 const router = express.Router();
+const { getMyProjects } = require("../controllers/projectController");
+
 
 const authMiddleware = require("../middlewares/authMiddleware");
 const {
@@ -13,21 +15,23 @@ const {
   getProjectRequests,
 } = require("../controllers/joinRequestController");
 
-
 // Create project (protected)
 router.post("/", authMiddleware, createProject);
+router.get("/", authMiddleware, getAllProjects);
 
-// Get all open projects
-router.get("/", getAllProjects);
+// Get projects owned by logged-in user
+router.get("/my", authMiddleware, getMyProjects);
 
-// Get single project
-router.get("/:id", getProjectById);
+router.get("/:id", authMiddleware, getProjectById);
+
 
 // Apply to project
 router.post("/:projectId/join", authMiddleware, applyToProject);
 
 // View project join requests (owner)
 router.get("/:projectId/requests", authMiddleware, getProjectRequests);
+
+
 
 
 module.exports = router;

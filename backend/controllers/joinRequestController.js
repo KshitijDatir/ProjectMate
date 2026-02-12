@@ -15,8 +15,16 @@ exports.applyToProject = async (req, res) => {
     }
 
     const project = await Project.findById(projectId);
+
     if (!project || project.status === "CLOSED") {
       return res.status(404).json({ message: "Project not available" });
+    }
+
+    // 🔒 RULE 2 — owner cannot apply to own project
+    if (project.owner.equals(req.user._id)) {
+      return res.status(403).json({
+        message: "You cannot apply to your own project",
+      });
     }
 
     const existingRequest = await JoinRequest.findOne({
@@ -27,7 +35,6 @@ exports.applyToProject = async (req, res) => {
     if (existingRequest) {
       return res.status(400).json({ message: "Already applied" });
     }
-
     const joinRequest = await JoinRequest.create({
       project: projectId,
       applicant: req.user._id,
@@ -102,7 +109,8 @@ exports.getProjectRequests = async (req, res) => {
  */
 exports.decideRequest = async (req, res) => {
   try {
-    const { decision } = req.body;
+    const { decision, message } = req.body;
+
 
     if (!["ACCEPTED", "REJECTED"].includes(decision)) {
       return res.status(400).json({ message: "Invalid decision" });
@@ -121,6 +129,11 @@ exports.decideRequest = async (req, res) => {
 
     request.status = decision;
     request.decisionAt = new Date();
+
+    if (message) {
+  request.decisionMessage = message;
+}
+
     await request.save();
 
     if (decision === "ACCEPTED") {
@@ -141,3 +154,31 @@ exports.decideRequest = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+/**
+ * GET /api/requests/:id
+ */
+exports.getSingleRequest = async (req, res) => {
+  try {
+    const request = await JoinRequest.findById(req.params.id)
+      .populate("project")
+      .populate("applicant", "-password");
+
+    if (!request) {
+      return res.status(404).json({ message: "Application not found" });
+    }
+
+    if (
+      request.project.owner.toString() !== req.user._id.toString()
+    ) {
+      return res.status(403).json({ message: "Not authorized" });
+    }
+
+    res.status(200).json({
+      success: true,
+      request,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Server error" });
+  }
+};
+

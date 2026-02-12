@@ -58,3 +58,25 @@ exports.getAllInternships = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+/**
+ * @desc    Get single internship by ID
+ * @route   GET /api/internships/:id
+ * @access  Public
+ */
+exports.getInternshipById = async (req, res) => {
+  try {
+    const internship = await Internship.findById(req.params.id)
+      .populate("postedBy", "name email");
+
+    if (!internship) {
+      return res.status(404).json({ message: "Internship not found" });
+    }
+
+    res.status(200).json({
+      success: true,
+      internship,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Server error" });
+  }
+};

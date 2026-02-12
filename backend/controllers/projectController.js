@@ -1,4 +1,5 @@
 const Project = require("../models/Project");
+const JoinRequest = require("../models/JoinRequest");
 
 /**
  * @desc    Create a new project
@@ -44,7 +45,10 @@ exports.createProject = async (req, res) => {
  */
 exports.getAllProjects = async (req, res) => {
   try {
-    const projects = await Project.find({ status: "OPEN" })
+    const projects = await Project.find({
+      status: "OPEN",
+      owner: { $ne: req.user._id },
+    })
       .populate("owner", "name email skills")
       .sort({ createdAt: -1 });
 
@@ -56,6 +60,7 @@ exports.getAllProjects = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
 
 /**
  * @desc    Get single project by ID
@@ -74,6 +79,47 @@ exports.getProjectById = async (req, res) => {
     res.status(200).json({
       success: true,
       project,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+
+/**
+ * @desc    Get projects owned by logged-in user
+ * @route   GET /api/projects/my
+ * @access  Private
+ */
+exports.getMyProjects = async (req, res) => {
+  try {
+    // Fetch projects owned by user
+    const projects = await Project.find({ owner: req.user._id })
+      .select("title teamSize currentTeamSize status")
+      .sort({ createdAt: -1 });
+
+    // Attach request count for each project
+    const projectsWithCounts = await Promise.all(
+      projects.map(async (project) => {
+        const requestCount = await JoinRequest.countDocuments({
+          project: project._id,
+          status: "PENDING",
+        });
+
+        return {
+          _id: project._id,
+          title: project.title,
+          teamSize: project.teamSize,
+          currentTeamSize: project.currentTeamSize,
+          status: project.status,
+          requestCount,
+        };
+      })
+    );
+
+    res.status(200).json({
+      success: true,
+      projects: projectsWithCounts,
     });
   } catch (error) {
     res.status(500).json({ message: "Server error" });
