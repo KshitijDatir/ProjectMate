@@ -4,12 +4,18 @@ const Internship = require("../models/Internship");
 const cleanupExpiredInternships = () => {
   cron.schedule("0 0 * * *", async () => {
     try {
-      const result = await Internship.deleteMany({
-        deadline: { $lt: new Date() },
-      });
+      const result = await Internship.updateMany(
+        {
+          deadline: { $lt: new Date() },
+          isDeleted: false,
+        },
+        {
+          isDeleted: true,
+        }
+      );
 
       console.log(
-        `[CRON] Deleted expired internships: ${result.deletedCount}`
+        `[CRON] Soft-deleted expired internships: ${result.modifiedCount}`
       );
     } catch (error) {
       console.error("[CRON] Internship cleanup error:", error);

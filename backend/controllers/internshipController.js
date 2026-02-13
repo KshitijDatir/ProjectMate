@@ -46,7 +46,9 @@ exports.createInternship = async (req, res) => {
  */
 exports.getAllInternships = async (req, res) => {
   try {
-    const internships = await Internship.find()
+    const internships = await Internship.find({
+      isDeleted: false,
+    })
       .populate("postedBy", "name email")
       .sort({ createdAt: -1 });
 
@@ -58,6 +60,7 @@ exports.getAllInternships = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
 /**
  * @desc    Get single internship by ID
  * @route   GET /api/internships/:id
@@ -65,8 +68,10 @@ exports.getAllInternships = async (req, res) => {
  */
 exports.getInternshipById = async (req, res) => {
   try {
-    const internship = await Internship.findById(req.params.id)
-      .populate("postedBy", "name email");
+    const internship = await Internship.findOne({
+      _id: req.params.id,
+      isDeleted: false,
+    }).populate("postedBy", "name email");
 
     if (!internship) {
       return res.status(404).json({ message: "Internship not found" });

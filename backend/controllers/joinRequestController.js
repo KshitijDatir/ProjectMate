@@ -14,16 +14,30 @@ exports.applyToProject = async (req, res) => {
       return res.status(400).json({ message: "SOP is required" });
     }
 
-    const project = await Project.findById(projectId);
+    const project = await Project.findOne({
+      _id: projectId,
+      isDeleted: false,
+    });
 
-    if (!project || project.status === "CLOSED") {
+    if (!project) {
       return res.status(404).json({ message: "Project not available" });
     }
 
-    // 🔒 RULE 2 — owner cannot apply to own project
+    if (project.status === "CLOSED") {
+      return res.status(400).json({ message: "Project is closed" });
+    }
+
+    // 🔒 Prevent owner applying
     if (project.owner.equals(req.user._id)) {
       return res.status(403).json({
         message: "You cannot apply to your own project",
+      });
+    }
+
+    // 🚫 Prevent applying if full
+    if (project.members.length >= project.teamSize) {
+      return res.status(400).json({
+        message: "Project is already full",
       });
     }
 
@@ -35,6 +49,7 @@ exports.applyToProject = async (req, res) => {
     if (existingRequest) {
       return res.status(400).json({ message: "Already applied" });
     }
+
     const joinRequest = await JoinRequest.create({
       project: projectId,
       applicant: req.user._id,
@@ -55,9 +70,17 @@ exports.applyToProject = async (req, res) => {
       request: joinRequest,
     });
   } catch (error) {
+    if (error.code === 11000) {
+      return res.status(400).json({
+        message: "You have already applied to this project",
+      });
+    }
+
+    console.error(error);
     res.status(500).json({ message: "Server error" });
   }
 };
+
 
 /**
  * Get my join requests
@@ -84,7 +107,10 @@ exports.getMyRequests = async (req, res) => {
  */
 exports.getProjectRequests = async (req, res) => {
   try {
-    const project = await Project.findById(req.params.projectId);
+    const project = await Project.findOne({
+  _id: req.params.projectId,
+  isDeleted: false,
+});
 
     if (!project || project.owner.toString() !== req.user._id.toString()) {
       return res.status(403).json({ message: "Not authorized" });
@@ -93,6 +119,9 @@ exports.getProjectRequests = async (req, res) => {
     const requests = await JoinRequest.find({
       project: project._id,
     }).populate("applicant", "name email skills");
+
+    
+
 
     res.status(200).json({
       success: true,
@@ -107,53 +136,101 @@ exports.getProjectRequests = async (req, res) => {
  * Accept / Reject join request
  * PUT /api/requests/:requestId/decision
  */
+const mongoose = require("mongoose");
+
 exports.decideRequest = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
   try {
     const { decision, message } = req.body;
 
-
     if (!["ACCEPTED", "REJECTED"].includes(decision)) {
+      await session.abortTransaction();
+      session.endSession();
       return res.status(400).json({ message: "Invalid decision" });
     }
 
-    const request = await JoinRequest.findById(req.params.requestId).populate(
-      "project"
-    );
+    const request = await JoinRequest.findById(req.params.requestId)
+      .populate("project")
+      .session(session);
 
     if (
       !request ||
       request.project.owner.toString() !== req.user._id.toString()
     ) {
+      await session.abortTransaction();
+      session.endSession();
       return res.status(403).json({ message: "Not authorized" });
+    }
+
+    if (request.status !== "PENDING") {
+      await session.abortTransaction();
+      session.endSession();
+      return res.status(400).json({
+        message: "Request has already been decided",
+      });
+    }
+
+    if (decision === "ACCEPTED") {
+      const updatedProject = await Project.findOneAndUpdate(
+        {
+          _id: request.project._id,
+          status: "OPEN",
+          isDeleted: false,
+          $expr: { $lt: [{ $size: "$members" }, "$teamSize"] },
+        },
+        {
+          $addToSet: { members: request.applicant },
+        },
+        { new: true, session }
+      );
+
+      if (!updatedProject) {
+        await session.abortTransaction();
+        session.endSession();
+        return res.status(400).json({
+          message: "Project is already full or closed",
+        });
+      }
+
+      if (updatedProject.members.length >= updatedProject.teamSize) {
+        updatedProject.status = "CLOSED";
+        await updatedProject.save({ session });
+      }
+    }
+
+    if (decision === "REJECTED") {
+      if (!message || message.trim() === "") {
+        await session.abortTransaction();
+        session.endSession();
+        return res.status(400).json({
+          message: "Rejection message is required",
+        });
+      }
+      request.decisionMessage = message;
     }
 
     request.status = decision;
     request.decisionAt = new Date();
+    await request.save({ session });
 
-    if (message) {
-  request.decisionMessage = message;
-}
-
-    await request.save();
-
-    if (decision === "ACCEPTED") {
-      request.project.currentTeamSize += 1;
-
-      if (request.project.currentTeamSize >= request.project.teamSize) {
-        request.project.status = "CLOSED";
-      }
-
-      await request.project.save();
-    }
+    await session.commitTransaction();
+    session.endSession();
 
     res.status(200).json({
       success: true,
       request,
     });
   } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    console.error(error);
     res.status(500).json({ message: "Server error" });
   }
 };
+
+
 /**
  * GET /api/requests/:id
  */
@@ -163,9 +240,10 @@ exports.getSingleRequest = async (req, res) => {
       .populate("project")
       .populate("applicant", "-password");
 
-    if (!request) {
-      return res.status(404).json({ message: "Application not found" });
-    }
+    if (!request || request.project.isDeleted) {
+  return res.status(404).json({ message: "Application not found" });
+}
+
 
     if (
       request.project.owner.toString() !== req.user._id.toString()

@@ -42,15 +42,15 @@ const projectSchema = new mongoose.Schema(
       min: 1,
     },
 
-    currentTeamSize: {
-      type: Number,
-      default: 1, // owner is first member
-    },
-
     status: {
       type: String,
       enum: ["OPEN", "CLOSED"],
       default: "OPEN",
+    },
+
+    isDeleted: {
+      type: Boolean,
+      default: false,
     },
   },
   { timestamps: true }

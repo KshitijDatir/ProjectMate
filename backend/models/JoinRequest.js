@@ -38,12 +38,21 @@ const joinRequestSchema = new mongoose.Schema(
     decisionAt: {
       type: Date,
     },
-    decisionMessage: {
-  type: String,
-},
 
+    decisionMessage: {
+      type: String,
+    },
   },
   { timestamps: true }
+);
+
+/**
+ * 🔒 Prevent duplicate applications
+ * One applicant can apply only once per project
+ */
+joinRequestSchema.index(
+  { project: 1, applicant: 1 },
+  { unique: true }
 );
 
 module.exports = mongoose.model("JoinRequest", joinRequestSchema);

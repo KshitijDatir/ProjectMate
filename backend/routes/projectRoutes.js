@@ -8,6 +8,7 @@ const {
   createProject,
   getAllProjects,
   getProjectById,
+  updateProjectStatus,
 } = require("../controllers/projectController");
 
 const {
@@ -32,6 +33,7 @@ router.post("/:projectId/join", authMiddleware, applyToProject);
 router.get("/:projectId/requests", authMiddleware, getProjectRequests);
 
 
+router.put("/:id/status", authMiddleware, updateProjectStatus);
 
 
 module.exports = router;

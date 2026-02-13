@@ -41,7 +41,7 @@ function ProjectCard({ project }) {
 
       {/* Footer */}
       <div className="mt-4 text-xs text-gray-500">
-        Team: {project.currentTeamSize}/{project.teamSize}
+        Team: {project.members?.length || 0}/{project.teamSize}
       </div>
     </div>
   )

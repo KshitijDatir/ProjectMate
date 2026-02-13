@@ -2,9 +2,7 @@ const Project = require("../models/Project");
 const JoinRequest = require("../models/JoinRequest");
 
 /**
- * @desc    Create a new project
- * @route   POST /api/projects
- * @access  Private
+ * Create Project
  */
 exports.createProject = async (req, res) => {
   try {
@@ -27,6 +25,7 @@ exports.createProject = async (req, res) => {
       requiredSkills,
       teamSize,
       owner: req.user._id,
+      members: [req.user._id], // owner auto-added
     });
 
     res.status(201).json({
@@ -39,14 +38,13 @@ exports.createProject = async (req, res) => {
 };
 
 /**
- * @desc    Get all open projects
- * @route   GET /api/projects
- * @access  Public
+ * Get All Open Projects
  */
 exports.getAllProjects = async (req, res) => {
   try {
     const projects = await Project.find({
       status: "OPEN",
+      isDeleted: false,
       owner: { $ne: req.user._id },
     })
       .populate("owner", "name email skills")
@@ -61,16 +59,17 @@ exports.getAllProjects = async (req, res) => {
   }
 };
 
-
 /**
- * @desc    Get single project by ID
- * @route   GET /api/projects/:id
- * @access  Public
+ * Get Single Project By ID
  */
 exports.getProjectById = async (req, res) => {
   try {
-    const project = await Project.findById(req.params.id)
-      .populate("owner", "name email skills");
+    const project = await Project.findOne({
+      _id: req.params.id,
+      isDeleted: false,
+    })
+      .populate("owner", "name email skills")
+      .populate("members", "name email skills");
 
     if (!project) {
       return res.status(404).json({ message: "Project not found" });
@@ -79,26 +78,23 @@ exports.getProjectById = async (req, res) => {
     res.status(200).json({
       success: true,
       project,
+      currentTeamSize: project.members.length, // derived
     });
   } catch (error) {
     res.status(500).json({ message: "Server error" });
   }
 };
 
-
 /**
- * @desc    Get projects owned by logged-in user
- * @route   GET /api/projects/my
- * @access  Private
+ * Get My Projects
  */
 exports.getMyProjects = async (req, res) => {
   try {
-    // Fetch projects owned by user
-    const projects = await Project.find({ owner: req.user._id })
-      .select("title teamSize currentTeamSize status")
-      .sort({ createdAt: -1 });
+    const projects = await Project.find({
+      owner: req.user._id,
+      isDeleted: false,
+    }).sort({ createdAt: -1 });
 
-    // Attach request count for each project
     const projectsWithCounts = await Promise.all(
       projects.map(async (project) => {
         const requestCount = await JoinRequest.countDocuments({
@@ -107,11 +103,8 @@ exports.getMyProjects = async (req, res) => {
         });
 
         return {
-          _id: project._id,
-          title: project.title,
-          teamSize: project.teamSize,
-          currentTeamSize: project.currentTeamSize,
-          status: project.status,
+          ...project.toObject(),
+          currentTeamSize: project.members.length,
           requestCount,
         };
       })
@@ -120,6 +113,39 @@ exports.getMyProjects = async (req, res) => {
     res.status(200).json({
       success: true,
       projects: projectsWithCounts,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Server error" });
+  }
+};
+/**
+ * Manually close or reopen project
+ * PUT /api/projects/:id/status
+ */
+exports.updateProjectStatus = async (req, res) => {
+  try {
+    const { status } = req.body;
+
+    if (!["OPEN", "CLOSED"].includes(status)) {
+      return res.status(400).json({ message: "Invalid status" });
+    }
+
+    const project = await Project.findOne({
+      _id: req.params.id,
+      owner: req.user._id,
+      isDeleted: false,
+    });
+
+    if (!project) {
+      return res.status(404).json({ message: "Project not found" });
+    }
+
+    project.status = status;
+    await project.save();
+
+    res.status(200).json({
+      success: true,
+      project,
     });
   } catch (error) {
     res.status(500).json({ message: "Server error" });
