@@ -66,3 +66,28 @@ exports.updateMyProfile = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+/**
+ * @desc    Get public user profile
+ * @route   GET /api/users/:id
+ * @access  Private (for now, requires auth)
+ */
+exports.getPublicProfile = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id).select(
+      "name college branch year skills resumeUrl"
+    );
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.status(200).json({
+      success: true,
+      user,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Server error" });
+  }
+};
+

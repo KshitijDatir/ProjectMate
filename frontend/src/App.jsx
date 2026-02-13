@@ -12,6 +12,8 @@ import CreateInternship from "./pages/CreateInternship"
 import InternshipDetail from "./pages/InternshipDetail"
 import Profile from "./pages/Profile"
 import ApplicationDetail from "./pages/ApplicationDetail"
+import PublicProfile from "./pages/PublicProfile"
+
 
 
 function App() {
@@ -23,6 +25,7 @@ function App() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/users/:id" element={<PublicProfile/>}/>
 
         {/* Protected routes */}
         <Route
@@ -91,6 +94,8 @@ function App() {
     </ProtectedRoute>
   }
 />
+
+
 
 
 

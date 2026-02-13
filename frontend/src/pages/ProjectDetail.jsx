@@ -1,4 +1,4 @@
-import { useParams } from "react-router-dom"
+import { useParams , useNavigate} from "react-router-dom"
 import { useEffect, useState } from "react"
 import { useAuth } from "../context/AuthContext"
 import DashboardNavbar from "../components/DashboardNavbar"
@@ -7,6 +7,8 @@ import Footer from "../components/Footer"
 function ProjectDetail() {
   // URL param
   const { id } = useParams()
+
+  const navigate = useNavigate();
 
   // Auth
   const { token } = useAuth()
@@ -122,6 +124,35 @@ function ProjectDetail() {
         <div className="mt-4 text-sm text-gray-500">
           Team: {project.currentTeamSize}/{project.teamSize}
         </div>
+
+        {/* Team Members */}
+<div className="mt-8">
+  <h3 className="text-lg font-semibold">Team Members</h3>
+
+  <div className="mt-4 space-y-3">
+    {project.members.map((member) => (
+      <div
+        key={member._id}
+        onClick={() => navigate(`/users/${member._id}`)}
+        className="p-4 border rounded-lg hover:shadow cursor-pointer transition"
+      >
+        <p className="font-medium">{member.name}</p>
+
+        <div className="flex gap-2 flex-wrap mt-2">
+          {member.skills?.map((skill, i) => (
+            <span
+              key={i}
+              className="px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded"
+            >
+              {skill}
+            </span>
+          ))}
+        </div>
+      </div>
+    ))}
+  </div>
+</div>
+
 
         {/* Apply section */}
         {project.status === "OPEN" && (
