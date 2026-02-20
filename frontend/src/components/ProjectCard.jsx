@@ -1,14 +1,20 @@
 import { useNavigate } from "react-router-dom"
 
-function ProjectCard({ project }) {
+function ProjectCard({ project, hasApplied = false }) {
   const navigate = useNavigate()
 
   return (
     <div
       onClick={() => navigate(`/projects/${project._id}`)}
-      className="bg-white border rounded-xl p-5 hover:shadow-md transition cursor-pointer"
+      className="bg-white border rounded-xl p-5 hover:shadow-md transition cursor-pointer relative"
     >
-      <h3 className="text-lg font-semibold text-gray-900">
+      {hasApplied && (
+        <span className="absolute top-3 right-3 flex items-center gap-1 px-2 py-0.5 text-xs font-semibold bg-green-100 text-green-700 rounded-full border border-green-200">
+          ✓ Applied
+        </span>
+      )}
+
+      <h3 className="text-lg font-semibold text-gray-900 pr-16">
         {project.title}
       </h3>
 

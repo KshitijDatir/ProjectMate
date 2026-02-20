@@ -1,9 +1,11 @@
+const mongoose = require("mongoose");
 const JoinRequest = require("../models/JoinRequest");
 const Project = require("../models/Project");
+const Notification = require("../models/Notification");
+const { getIO } = require("../socket");
 
 /**
  * Apply to join a project
- * POST /api/projects/:projectId/join
  */
 exports.applyToProject = async (req, res) => {
   try {
@@ -27,14 +29,12 @@ exports.applyToProject = async (req, res) => {
       return res.status(400).json({ message: "Project is closed" });
     }
 
-    // 🔒 Prevent owner applying
     if (project.owner.equals(req.user._id)) {
       return res.status(403).json({
         message: "You cannot apply to your own project",
       });
     }
 
-    // 🚫 Prevent applying if full
     if (project.members.length >= project.teamSize) {
       return res.status(400).json({
         message: "Project is already full",
@@ -65,7 +65,23 @@ exports.applyToProject = async (req, res) => {
       },
     });
 
-    res.status(201).json({
+    // ✅ Save persistent notification
+    const notification = await Notification.create({
+      recipient: project.owner,
+      type: "NEW_APPLICATION",
+      message: `${req.user.name} applied to your project "${project.title}"`,
+      entityId: joinRequest._id,
+      entityType: "REQUEST",
+    });
+
+    // ✅ Emit real-time
+    const io = getIO();
+    io.to(`user:${project.owner.toString()}`).emit(
+      "notification",
+      notification
+    );
+
+    return res.status(201).json({
       success: true,
       request: joinRequest,
     });
@@ -77,14 +93,12 @@ exports.applyToProject = async (req, res) => {
     }
 
     console.error(error);
-    res.status(500).json({ message: "Server error" });
+    return res.status(500).json({ message: "Server error" });
   }
 };
 
-
 /**
  * Get my join requests
- * GET /api/requests/my
  */
 exports.getMyRequests = async (req, res) => {
   try {
@@ -92,25 +106,24 @@ exports.getMyRequests = async (req, res) => {
       applicant: req.user._id,
     }).populate("project", "title status");
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       requests,
     });
   } catch (error) {
-    res.status(500).json({ message: "Server error" });
+    return res.status(500).json({ message: "Server error" });
   }
 };
 
 /**
  * Get join requests for a project (owner)
- * GET /api/projects/:projectId/requests
  */
 exports.getProjectRequests = async (req, res) => {
   try {
     const project = await Project.findOne({
-  _id: req.params.projectId,
-  isDeleted: false,
-});
+      _id: req.params.projectId,
+      isDeleted: false,
+    });
 
     if (!project || project.owner.toString() !== req.user._id.toString()) {
       return res.status(403).json({ message: "Not authorized" });
@@ -120,24 +133,18 @@ exports.getProjectRequests = async (req, res) => {
       project: project._id,
     }).populate("applicant", "name email skills");
 
-    
-
-
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       requests,
     });
   } catch (error) {
-    res.status(500).json({ message: "Server error" });
+    return res.status(500).json({ message: "Server error" });
   }
 };
 
 /**
  * Accept / Reject join request
- * PUT /api/requests/:requestId/decision
  */
-const mongoose = require("mongoose");
-
 exports.decideRequest = async (req, res) => {
   const session = await mongoose.startSession();
   session.startTransaction();
@@ -218,7 +225,23 @@ exports.decideRequest = async (req, res) => {
     await session.commitTransaction();
     session.endSession();
 
-    res.status(200).json({
+    // ✅ Save persistent notification
+    const notification = await Notification.create({
+      recipient: request.applicant,
+      type: "REQUEST_DECISION",
+      message: `Your request for "${request.project.title}" was ${decision}`,
+      entityId: request._id,
+      entityType: "REQUEST",
+    });
+
+    // ✅ Emit real-time
+    const io = getIO();
+    io.to(`user:${request.applicant.toString()}`).emit(
+      "notification",
+      notification
+    );
+
+    return res.status(200).json({
       success: true,
       request,
     });
@@ -226,11 +249,13 @@ exports.decideRequest = async (req, res) => {
     await session.abortTransaction();
     session.endSession();
     console.error(error);
-    res.status(500).json({ message: "Server error" });
+    return res.status(500).json({ message: "Server error" });
   }
 };
 
-
+/**
+ * Get single request (owner view)
+ */
 /**
  * GET /api/requests/:id
  */
@@ -241,22 +266,94 @@ exports.getSingleRequest = async (req, res) => {
       .populate("applicant", "-password");
 
     if (!request || request.project.isDeleted) {
-  return res.status(404).json({ message: "Application not found" });
-}
+      return res.status(404).json({ message: "Application not found" });
+    }
 
+    const isOwner =
+      request.project.owner.toString() === req.user._id.toString();
 
-    if (
-      request.project.owner.toString() !== req.user._id.toString()
-    ) {
+    const isApplicant =
+      request.applicant._id.toString() === req.user._id.toString();
+
+    if (!isOwner && !isApplicant) {
       return res.status(403).json({ message: "Not authorized" });
     }
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       request,
     });
   } catch (error) {
-    res.status(500).json({ message: "Server error" });
+    return res.status(500).json({ message: "Server error" });
   }
 };
+/**
+ * Edit SOP (Applicant Only)
+ */
+exports.editRequest = async (req, res) => {
+  try {
+    const { sop, __v } = req.body;
+    const { requestId } = req.params;
 
+    if (!sop || typeof __v !== "number") {
+      return res.status(400).json({
+        message: "SOP and version (__v) are required",
+      });
+    }
+
+    const existingRequest = await JoinRequest.findById(requestId);
+
+    if (!existingRequest) {
+      return res.status(404).json({ message: "Request not found" });
+    }
+
+    if (!existingRequest.applicant.equals(req.user._id)) {
+      return res.status(403).json({ message: "Not authorized" });
+    }
+
+    if (existingRequest.status !== "PENDING") {
+      return res.status(400).json({
+        message: "Cannot edit a decided request",
+      });
+    }
+
+    const project = await Project.findOne({
+      _id: existingRequest.project,
+      isDeleted: false,
+    });
+
+    if (!project || project.status !== "OPEN") {
+      return res.status(400).json({
+        message: "Project is closed",
+      });
+    }
+
+    const updatedRequest = await JoinRequest.findOneAndUpdate(
+      {
+        _id: requestId,
+        applicant: req.user._id,
+        status: "PENDING",
+        __v: __v,
+      },
+      {
+        $set: { sop },
+        $inc: { __v: 1 },
+      },
+      { new: true }
+    );
+
+    if (!updatedRequest) {
+      return res.status(409).json({
+        message: "Request was modified or decided. Please refresh.",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      request: updatedRequest,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Server error" });
+  }
+};

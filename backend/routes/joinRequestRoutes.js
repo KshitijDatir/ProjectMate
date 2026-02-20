@@ -2,10 +2,12 @@ const express = require("express");
 const router = express.Router();
 
 const authMiddleware = require("../middlewares/authMiddleware");
+
 const {
   getMyRequests,
   decideRequest,
-  getSingleRequest,   // ✅ add this
+  getSingleRequest,
+  editRequest,   // ✅ ADDED
 } = require("../controllers/joinRequestController");
 
 // My join requests
@@ -16,5 +18,8 @@ router.get("/:id", authMiddleware, getSingleRequest);
 
 // Accept / reject request
 router.put("/:requestId/decision", authMiddleware, decideRequest);
+
+// Edit request (Applicant only, PENDING only)
+router.put("/:requestId", authMiddleware, editRequest);
 
 module.exports = router;

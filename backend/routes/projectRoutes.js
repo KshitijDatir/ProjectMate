@@ -9,6 +9,7 @@ const {
   getAllProjects,
   getProjectById,
   updateProjectStatus,
+  updateProject
 } = require("../controllers/projectController");
 
 const {
@@ -34,6 +35,9 @@ router.get("/:projectId/requests", authMiddleware, getProjectRequests);
 
 
 router.put("/:id/status", authMiddleware, updateProjectStatus);
+
+router.put("/:id", authMiddleware, updateProject)
+
 
 
 module.exports = router;

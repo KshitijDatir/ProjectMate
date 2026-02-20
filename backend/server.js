@@ -1,9 +1,11 @@
 const express = require("express");
 const cors = require("cors");
 const dotenv = require("dotenv");
+const http = require("http");
 
 const connectDB = require("./config/db");
 const cleanupExpiredInternships = require("./utils/cleanupInternships");
+const socket = require("./socket"); // ✅ NEW
 
 // Load environment variables FIRST
 dotenv.config();
@@ -27,15 +29,22 @@ app.use("/api/users", require("./routes/userRoutes"));
 app.use("/api/projects", require("./routes/projectRoutes"));
 app.use("/api/requests", require("./routes/joinRequestRoutes"));
 app.use("/api/internships", require("./routes/internshipRoutes"));
+app.use("/api/notifications", require("./routes/notificationRoutes"));
 
 // Health check
 app.get("/", (req, res) => {
   res.send("ProjectMate backend is running 🚀");
 });
 
+// ✅ Create HTTP server manually
+const server = http.createServer(app);
+
+// ✅ Initialize Socket.io
+socket.init(server);
+
 // Start server
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });

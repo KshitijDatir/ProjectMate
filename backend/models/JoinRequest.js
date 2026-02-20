@@ -17,6 +17,7 @@ const joinRequestSchema = new mongoose.Schema(
     sop: {
       type: String,
       required: true,
+      trim: true,
     },
 
     applicantSnapshot: {
@@ -43,12 +44,14 @@ const joinRequestSchema = new mongoose.Schema(
       type: String,
     },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+    optimisticConcurrency: true,   // ✅ ADDED
+  }
 );
 
 /**
  * 🔒 Prevent duplicate applications
- * One applicant can apply only once per project
  */
 joinRequestSchema.index(
   { project: 1, applicant: 1 },

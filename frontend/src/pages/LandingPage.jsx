@@ -16,7 +16,7 @@ function LandingPage() {
       <HowItWorks />
       <CTA />
       <Footer />
-    </div>
+    </div> 
   );
 }
 

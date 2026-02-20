@@ -53,7 +53,9 @@ const projectSchema = new mongoose.Schema(
       default: false,
     },
   },
-  { timestamps: true }
+  { timestamps: true,
+    optimisticConcurrency: true,
+   }
 );
 
 module.exports = mongoose.model("Project", projectSchema);

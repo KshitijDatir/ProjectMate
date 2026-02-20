@@ -6,25 +6,15 @@ function IncomingRequests() {
   const { token } = useAuth()
   const navigate = useNavigate()
 
-  // 🔹 Projects owned by user
   const [projects, setProjects] = useState([])
   const [projectsLoading, setProjectsLoading] = useState(true)
   const [projectsError, setProjectsError] = useState("")
 
-  // 🔹 Selected project
   const [selectedProject, setSelectedProject] = useState(null)
 
-  // 🔹 Requests for selected project
   const [requests, setRequests] = useState([])
   const [requestsLoading, setRequestsLoading] = useState(false)
   const [requestsError, setRequestsError] = useState("")
-
-  // 🔹 Per-request action status (loading / success / error)
-  const [actionStatus, setActionStatus] = useState({})
-
-  /* ==========================
-     FETCH MY PROJECTS
-  ========================== */
 
   useEffect(() => {
     async function fetchMyProjects() {
@@ -32,9 +22,7 @@ function IncomingRequests() {
         const res = await fetch(
           `${import.meta.env.VITE_API_BASE_URL}/projects/my`,
           {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
+            headers: { Authorization: `Bearer ${token}` },
           }
         )
 
@@ -55,10 +43,6 @@ function IncomingRequests() {
     fetchMyProjects()
   }, [token])
 
-  /* ==========================
-     FETCH REQUESTS FOR PROJECT
-  ========================== */
-
   async function loadRequests(project) {
     setSelectedProject(project)
     setRequestsLoading(true)
@@ -69,9 +53,7 @@ function IncomingRequests() {
       const res = await fetch(
         `${import.meta.env.VITE_API_BASE_URL}/projects/${project._id}/requests`,
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         }
       )
 
@@ -89,67 +71,6 @@ function IncomingRequests() {
     }
   }
 
-  /* ==========================
-     ACCEPT / REJECT (INLINE)
-  ========================== */
-
-  async function handleDecision(requestId, decision) {
-    try {
-      // Set loading state
-      setActionStatus((prev) => ({
-        ...prev,
-        [requestId]: { loading: true, error: "", success: "" },
-      }))
-
-      const res = await fetch(
-        `${import.meta.env.VITE_API_BASE_URL}/requests/${requestId}/decision`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ decision }),
-        }
-      )
-
-      const data = await res.json()
-
-      if (!res.ok) {
-        throw new Error(data.message || "Action failed")
-      }
-
-      // Update request status locally
-      setRequests((prev) =>
-        prev.map((r) =>
-          r._id === requestId ? { ...r, status: decision } : r
-        )
-      )
-
-      setActionStatus((prev) => ({
-        ...prev,
-        [requestId]: {
-          loading: false,
-          error: "",
-          success: `Application ${decision.toLowerCase()} successfully`,
-        },
-      }))
-    } catch (err) {
-      setActionStatus((prev) => ({
-        ...prev,
-        [requestId]: {
-          loading: false,
-          error: err.message,
-          success: "",
-        },
-      }))
-    }
-  }
-
-  /* ==========================
-     UI STATES
-  ========================== */
-
   if (projectsLoading) {
     return <p className="text-gray-600">Loading your projects...</p>
   }
@@ -166,39 +87,51 @@ function IncomingRequests() {
     )
   }
 
-  /* ==========================
-     RENDER
-  ========================== */
-
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-6">
-        My Projects
-      </h1>
+      <h1 className="text-2xl font-bold mb-6">My Projects</h1>
 
       {/* ================= PROJECT LIST ================= */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 mb-10">
         {projects.map((project) => (
-          <button
+          <div
             key={project._id}
-            onClick={() => loadRequests(project)}
-            className={`border rounded-lg p-4 text-left hover:bg-gray-50 ${
+            className={`border rounded-lg p-4 hover:bg-gray-50 ${
               selectedProject?._id === project._id
                 ? "border-blue-500 bg-blue-50"
                 : "bg-white"
             }`}
           >
-            <h2 className="font-semibold text-gray-900">
-              {project.title}
-            </h2>
+            {/* Clickable area for selecting project */}
+            <div
+              onClick={() => loadRequests(project)}
+              className="cursor-pointer"
+            >
+              <h2 className="font-semibold text-gray-900">
+                {project.title}
+              </h2>
 
-            <p className="mt-1 text-sm text-gray-600">
-              Requests:{" "}
-              <span className="font-medium">
-                {project.requestCount}
-              </span>
-            </p>
-          </button>
+              <p className="mt-1 text-sm text-gray-600">
+                Requests:{" "}
+                <span className="font-medium">
+                  {project.requestCount}
+                </span>
+              </p>
+            </div>
+
+            {/* Edit Button */}
+            <div className="mt-3">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  navigate(`/projects/${project._id}/edit`)
+                }}
+                className="text-sm text-blue-600 hover:underline"
+              >
+                Edit Project
+              </button>
+            </div>
+          </div>
         ))}
       </div>
 
@@ -226,33 +159,32 @@ function IncomingRequests() {
           <div className="space-y-4">
             {requests.map((req) => (
               <div
-  key={req._id}
-  onClick={() => navigate(`/application/${req._id}`)}
-  className="bg-white border rounded-lg p-5 cursor-pointer hover:bg-gray-50 hover:shadow-md transition"
->
-  <h3 className="font-semibold text-gray-900">
-    {req.applicantSnapshot.name}
-  </h3>
+                key={req._id}
+                onClick={() => navigate(`/application/${req._id}`)}
+                className="bg-white border rounded-lg p-5 cursor-pointer hover:bg-gray-50 hover:shadow-md transition"
+              >
+                <h3 className="font-semibold text-gray-900">
+                  {req.applicantSnapshot.name}
+                </h3>
 
-  <p className="text-sm text-gray-600 mt-1">
-    {req.applicantSnapshot.college} • {req.applicantSnapshot.branch}
-  </p>
+                <p className="text-sm text-gray-600 mt-1">
+                  {req.applicantSnapshot.college} • {req.applicantSnapshot.branch}
+                </p>
 
-  <p className="mt-3 text-sm text-gray-700 line-clamp-2">
-    <span className="font-medium">SOP:</span> {req.sop}
-  </p>
+                <p className="mt-3 text-sm text-gray-700 line-clamp-2">
+                  <span className="font-medium">SOP:</span> {req.sop}
+                </p>
 
-  <div className="mt-4 flex justify-between items-center">
-    <span className="text-xs text-gray-500">
-      Status: {req.status}
-    </span>
+                <div className="mt-4 flex justify-between items-center">
+                  <span className="text-xs text-gray-500">
+                    Status: {req.status}
+                  </span>
 
-    <span className="text-xs text-blue-600 font-medium">
-      Click to view more →
-    </span>
-  </div>
-</div>
-
+                  <span className="text-xs text-blue-600 font-medium">
+                    Click to view more →
+                  </span>
+                </div>
+              </div>
             ))}
           </div>
         </div>

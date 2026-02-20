@@ -13,6 +13,7 @@ import InternshipDetail from "./pages/InternshipDetail"
 import Profile from "./pages/Profile"
 import ApplicationDetail from "./pages/ApplicationDetail"
 import PublicProfile from "./pages/PublicProfile"
+import EditProject from "./pages/EditProject"
 
 
 
@@ -94,6 +95,15 @@ function App() {
     </ProtectedRoute>
   }
 />
+<Route
+ path="/projects/:id/edit" 
+ element={
+    <ProtectedRoute>
+      <EditProject />
+    </ProtectedRoute>
+  } 
+/>
+
 
 
 

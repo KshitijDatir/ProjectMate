@@ -30,6 +30,9 @@ function Home() {
   const [internships, setInternships] = useState([])
   const [filteredInternships, setFilteredInternships] = useState([])
 
+  // 🔹 Applied project IDs (for badge)
+  const [appliedProjectIds, setAppliedProjectIds] = useState(new Set())
+
   // 🔹 Loading / error
   const [homeLoading, setHomeLoading] = useState(false)
   const [projectsLoading, setProjectsLoading] = useState(false)
@@ -55,6 +58,29 @@ function Home() {
     else if (tab === "internships") setActiveSection("internships")
     else setActiveSection("home")
   }, [searchParams])
+
+  /* ================= FETCH APPLIED IDS ================= */
+
+  useEffect(() => {
+    if (!token) return
+    async function loadApplied() {
+      try {
+        const res = await fetch(
+          `${import.meta.env.VITE_API_BASE_URL}/requests/my`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        )
+        if (!res.ok) return
+        const data = await res.json()
+        const ids = new Set(
+          (data.requests || []).map((r) => r.project?._id || r.project)
+        )
+        setAppliedProjectIds(ids)
+      } catch {
+        // silently ignore — badge is non-critical
+      }
+    }
+    loadApplied()
+  }, [token])
 
   /* ================= HOME DATA ================= */
 
@@ -203,99 +229,103 @@ function Home() {
         <div className="max-w-7xl mx-auto px-6 py-12">
 
           {/* ================= HOME DASHBOARD ================= */}
-{activeSection === "home" && (
-  <div className="space-y-12">
+          {activeSection === "home" && (
+            <div className="space-y-12">
 
-    {/* Welcome Card */}
-    <div className="bg-white border rounded-xl p-6 shadow-sm flex items-center justify-between">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">
-          Welcome to ProjectMate
-        </h1>
-        <p className="text-gray-600 mt-2">
-          Connect with students, collaborate on projects, and discover internship opportunities.
-        </p>
-      </div>
+              {/* Welcome Card */}
+              <div className="bg-white border rounded-xl p-6 shadow-sm flex items-center justify-between">
+                <div>
+                  <h1 className="text-2xl font-bold text-gray-900">
+                    Welcome to ProjectMate
+                  </h1>
+                  <p className="text-gray-600 mt-2">
+                    Connect with students, collaborate on projects, and discover internship opportunities.
+                  </p>
+                </div>
 
-      <div className="flex space-x-3">
-        <button
-          onClick={() => navigate("/create-project?from=home")}
-          className="px-4 py-2 rounded-md bg-blue-600 text-white font-medium hover:bg-blue-700"
-        >
-          Create Project
-        </button>
+                <div className="flex space-x-3">
+                  <button
+                    onClick={() => navigate("/create-project?from=home")}
+                    className="px-4 py-2 rounded-md bg-blue-600 text-white font-medium hover:bg-blue-700"
+                  >
+                    Create Project
+                  </button>
 
-        <button
-          onClick={() => navigate("/create-internship?from=home")}
-          className="px-4 py-2 rounded-md border border-blue-600 text-blue-600 font-medium hover:bg-blue-50"
-        >
-          Create Internship
-        </button>
-      </div>
-    </div>
+                  <button
+                    onClick={() => navigate("/create-internship?from=home")}
+                    className="px-4 py-2 rounded-md border border-blue-600 text-blue-600 font-medium hover:bg-blue-50"
+                  >
+                    Create Internship
+                  </button>
+                </div>
+              </div>
 
-    {/* Recent Projects */}
-    <section>
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">
-          Explore Projects
-        </h2>
-        <button
-          onClick={() => setActiveSection("projects")}
-          className="text-blue-600 hover:text-blue-700 font-medium"
-        >
-          View all →
-        </button>
-      </div>
+              {/* Recent Projects */}
+              <section>
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-2xl font-bold text-gray-900">
+                    Explore Projects
+                  </h2>
+                  <button
+                    onClick={() => setActiveSection("projects")}
+                    className="text-blue-600 hover:text-blue-700 font-medium"
+                  >
+                    View all →
+                  </button>
+                </div>
 
-      {homeLoading ? (
-        <p className="text-gray-600">Loading projects...</p>
-      ) : homeError ? (
-        <p className="text-red-600">{homeError}</p>
-      ) : recentProjects.length === 0 ? (
-        <p className="text-gray-600">No projects available yet.</p>
-      ) : (
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {recentProjects.map(project => (
-            <ProjectCard key={project._id} project={project} />
-          ))}
-        </div>
-      )}
-    </section>
+                {homeLoading ? (
+                  <p className="text-gray-600">Loading projects...</p>
+                ) : homeError ? (
+                  <p className="text-red-600">{homeError}</p>
+                ) : recentProjects.length === 0 ? (
+                  <p className="text-gray-600">No projects available yet.</p>
+                ) : (
+                  <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                    {recentProjects.map(project => (
+                      <ProjectCard
+                        key={project._id}
+                        project={project}
+                        hasApplied={appliedProjectIds.has(project._id)}
+                      />
+                    ))}
+                  </div>
+                )}
+              </section>
 
-    {/* Recent Internships */}
-    <section>
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">
-          Explore Internships
-        </h2>
-        <button
-          onClick={() => setActiveSection("internships")}
-          className="text-blue-600 hover:text-blue-700 font-medium"
-        >
-          View all →
-        </button>
-      </div>
+              {/* Recent Internships */}
+              <section>
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-2xl font-bold text-gray-900">
+                    Explore Internships
+                  </h2>
+                  <button
+                    onClick={() => setActiveSection("internships")}
+                    className="text-blue-600 hover:text-blue-700 font-medium"
+                  >
+                    View all →
+                  </button>
+                </div>
 
-      {homeLoading ? (
-        <p className="text-gray-600">Loading internships...</p>
-      ) : homeError ? (
-        <p className="text-red-600">{homeError}</p>
-      ) : recentInternships.length === 0 ? (
-        <p className="text-gray-600">No internships available yet.</p>
-      ) : (
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {recentInternships.map(internship => (
-            <InternshipCard
-              key={internship._id}
-              internship={internship}
-            />
-          ))}
-        </div>
-      )}
-    </section>
-  </div>
-)}
+                {homeLoading ? (
+                  <p className="text-gray-600">Loading internships...</p>
+                ) : homeError ? (
+                  <p className="text-red-600">{homeError}</p>
+                ) : recentInternships.length === 0 ? (
+                  <p className="text-gray-600">No internships available yet.</p>
+                ) : (
+                  <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                    {recentInternships.map(internship => (
+                      <InternshipCard
+                        key={internship._id}
+                        internship={internship}
+                      />
+                    ))}
+                  </div>
+                )}
+              </section>
+            </div>
+          )}
 
 
           {/* ================= PROJECTS SECTION ================= */}
@@ -323,7 +353,11 @@ function Home() {
 
               <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                 {filteredProjects.map(project => (
-                  <ProjectCard key={project._id} project={project} />
+                  <ProjectCard
+                    key={project._id}
+                    project={project}
+                    hasApplied={appliedProjectIds.has(project._id)}
+                  />
                 ))}
               </div>
             </>
