@@ -1,87 +1,75 @@
-import { useState, useEffect } from "react"
-import { useNavigate, Link } from "react-router-dom"
-import { loginUser } from "./authApi"
-import { useAuth } from "../context/AuthContext"
+import { useState, useEffect } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { loginUser } from "./authApi";
+import { useAuth } from "../context/AuthContext";
+import AuthLayout from "../components/AuthLayout";
 
 function Login() {
-  const { login, token, loading } = useAuth()
-  const navigate = useNavigate()
+  const { login, token, loading } = useAuth();
+  const navigate = useNavigate();
 
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [error, setError] = useState("")
-  const [submitting, setSubmitting] = useState(false)
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
-  // 🔒 Redirect if already authenticated
   useEffect(() => {
-    if (!loading && token) {
-      navigate("/home", { replace: true })
-    }
-  }, [token, loading, navigate])
+    if (!loading && token) navigate("/home", { replace: true });
+  }, [token, loading, navigate]);
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    setError("")
-    setSubmitting(true)
-
+    e.preventDefault();
+    setError("");
+    setSubmitting(true);
     try {
-      const data = await loginUser(email, password)
-      // expected: { token }
-      login(data.token)
-      navigate("/home", { replace: true })
+      const data = await loginUser(email, password);
+      login(data.token);
+      navigate("/home", { replace: true });
     } catch (err) {
-      setError(err.message || "Login failed")
+      setError(err.message || "Login failed");
     } finally {
-      setSubmitting(false)
+      setSubmitting(false);
     }
-  }
+  };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-6">
-      <form
-        onSubmit={handleSubmit}
-        className="w-full max-w-md bg-white border rounded-xl p-8 shadow-sm"
-      >
-        <h1 className="text-2xl font-bold text-center text-gray-900">
-          Sign in to ProjectMate
-        </h1>
+    <AuthLayout title="Welcome Back" subtitle="Sign in to continue your journey">
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <h2 className="text-2xl font-bold text-center" style={{ color: 'var(--text)' }}>Sign In</h2>
+        {error && <p className="text-sm text-red-600 text-center">{error}</p>}
 
-        <p className="mt-2 text-sm text-gray-600 text-center">
-          Welcome back. Please enter your details.
-        </p>
-
-        {error && (
-          <p className="mt-4 text-sm text-red-600 text-center">
-            {error}
-          </p>
-        )}
-
-        {/* Email */}
-        <div className="mt-6">
-          <label className="block text-sm font-medium text-gray-700">
-            Email address
-          </label>
+        <div>
+          <label className="block text-sm font-medium" style={{ color: 'var(--text-muted)' }}>Email</label>
           <input
             type="email"
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="mt-2 w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="mt-2 w-full border rounded-md px-4 py-3 focus:outline-none focus:ring-2"
+            style={{
+              backgroundColor: 'var(--background)',
+              borderColor: 'var(--border)',
+              color: 'var(--text)',
+              '--tw-ring-color': 'var(--primary)'
+            }}
             placeholder="you@example.com"
           />
         </div>
 
-        {/* Password */}
-        <div className="mt-4">
-          <label className="block text-sm font-medium text-gray-700">
-            Password
-          </label>
+        <div>
+          <label className="block text-sm font-medium" style={{ color: 'var(--text-muted)' }}>Password</label>
           <input
             type="password"
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="mt-2 w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="mt-2 w-full border rounded-md px-4 py-3 focus:outline-none focus:ring-2"
+            style={{
+              backgroundColor: 'var(--background)',
+              borderColor: 'var(--border)',
+              color: 'var(--text)',
+              '--tw-ring-color': 'var(--primary)'
+            }}
             placeholder="••••••••"
           />
         </div>
@@ -89,23 +77,55 @@ function Login() {
         <button
           type="submit"
           disabled={submitting}
-          className="mt-6 w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 disabled:opacity-50"
+          className="w-full hologram-btn py-3 rounded-md font-semibold text-white disabled:opacity-50"
+          style={{ backgroundColor: 'var(--primary)' }}
         >
           {submitting ? "Signing in..." : "Sign In"}
         </button>
 
-        <p className="mt-6 text-sm text-center text-gray-600">
-          Don’t have an account?{" "}
-          <Link
-            to="/register"
-            className="text-blue-600 hover:underline font-medium"
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t" style={{ borderColor: 'var(--border)' }}></div>
+          </div>
+          <div className="relative flex justify-center text-sm">
+            <span className="px-2" style={{ backgroundColor: 'var(--surface)', color: 'var(--text-muted)' }}>
+              Or sign in with
+            </span>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <button
+            type="button"
+            className="py-2 px-4 border rounded-md hologram-btn"
+            style={{ borderColor: 'var(--border)', color: 'var(--text)' }}
           >
+            Google
+          </button>
+          <button
+            type="button"
+            className="py-2 px-4 border rounded-md hologram-btn"
+            style={{ borderColor: 'var(--border)', color: 'var(--text)' }}
+          >
+            Apple
+          </button>
+        </div>
+
+        <p className="text-sm text-center" style={{ color: 'var(--text-muted)' }}>
+          Don't have an account?{" "}
+          <Link to="/register" className="hologram-link font-medium" style={{ color: 'var(--primary)' }}>
             Sign up
           </Link>
         </p>
+
+        <div className="text-center">
+          <Link to="/" className="hologram-link text-sm" style={{ color: 'var(--text-muted)' }}>
+            ← Back to website
+          </Link>
+        </div>
       </form>
-    </div>
-  )
+    </AuthLayout>
+  );
 }
 
-export default Login
+export default Login;

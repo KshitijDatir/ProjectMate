@@ -14,19 +14,18 @@ import Profile from "./pages/Profile"
 import ApplicationDetail from "./pages/ApplicationDetail"
 import PublicProfile from "./pages/PublicProfile"
 import EditProject from "./pages/EditProject"
-
-
+import RippleEffect from "./components/RippleEffect"
 
 function App() {
   return (
     <BrowserRouter>
+      <RippleEffect />
       <Routes>
-
         {/* Public routes */}
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/users/:id" element={<PublicProfile/>}/>
+        <Route path="/users/:id" element={<PublicProfile />} />
 
         {/* Protected routes */}
         <Route
@@ -37,7 +36,6 @@ function App() {
             </ProtectedRoute>
           }
         />
-
         <Route
           path="/projects/:id"
           element={
@@ -63,55 +61,45 @@ function App() {
           }
         />
         <Route
-  path="/create-internship"
-  element={
-    <ProtectedRoute>
-      <CreateInternship
-       />
-    </ProtectedRoute>
-  }
-/>
-<Route
-  path="/internships/:id"
-  element={
-    <ProtectedRoute>
-      <InternshipDetail />
-    </ProtectedRoute>
-  }
-/>
-<Route
-  path="/profile"
-  element={
-    <ProtectedRoute>
-      <Profile />
-    </ProtectedRoute>
-  }
-/>
-<Route
-  path="/application/:id"
-  element={
-    <ProtectedRoute>
-      <ApplicationDetail />
-    </ProtectedRoute>
-  }
-/>
-<Route
- path="/projects/:id/edit" 
- element={
-    <ProtectedRoute>
-      <EditProject />
-    </ProtectedRoute>
-  } 
-/>
-
-
-
-
-
-
-
-
-
+          path="/create-internship"
+          element={
+            <ProtectedRoute>
+              <CreateInternship />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/internships/:id"
+          element={
+            <ProtectedRoute>
+              <InternshipDetail />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/application/:id"
+          element={
+            <ProtectedRoute>
+              <ApplicationDetail />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/projects/:id/edit"
+          element={
+            <ProtectedRoute>
+              <EditProject />
+            </ProtectedRoute>
+          }
+        />
       </Routes>
     </BrowserRouter>
   )

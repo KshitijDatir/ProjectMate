@@ -1,3 +1,308 @@
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+
+/* ===== THEME VARIABLES ===== */
+:root {
+  /* Scheme1 Light (default) */
+  --primary: #0D5C63;
+  --primary-rgb: 13, 92, 99;
+  --secondary: #A7F3D0;
+  --secondary-rgb: 167, 243, 208;
+  --accent: #C26D3B;
+  --accent-rgb: 194, 109, 59;
+  --text: #1F2937;
+  --text-muted: #4B5563;
+  --background: #F6F1EB;
+  --surface: #FFFFFF;
+  --border: #E5E7EB;
+  --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  --hologram-gradient: linear-gradient(45deg, transparent, rgba(194, 109, 59, 0.2), transparent);
+  --hologram-glow: 0 0 15px rgba(13, 92, 99, 0.3);
+  --navbar-bg: rgba(255, 255, 255, 0.95);
+  --footer-bg: #1F2937;
+  --footer-text: #F9FAFB;
+  --footer-text-muted: #9CA3AF;
+}
+
+/* Scheme1 Dark */
+[data-theme="scheme1"][data-mode="dark"] {
+  --primary: #1E7A84;
+  --primary-rgb: 30, 122, 132;
+  --secondary: #6BAB90;
+  --secondary-rgb: 107, 171, 144;
+  --accent: #E58C4D;
+  --accent-rgb: 229, 140, 77;
+  --text: #E2E8F0;
+  --text-muted: #A0AEC0;
+  --background: #0A1920;
+  --surface: #1A2F38;
+  --border: #2D3748;
+  --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+  --hologram-gradient: linear-gradient(45deg, transparent, rgba(229, 140, 77, 0.3), transparent);
+  --hologram-glow: 0 0 20px rgba(30, 122, 132, 0.6);
+  --navbar-bg: rgba(26, 47, 56, 0.95);
+  --footer-bg: #0A1920;
+  --footer-text: #E2E8F0;
+  --footer-text-muted: #d9dfe6;
+}
+
+/* Scheme2 Light */
+[data-theme="scheme2"][data-mode="light"] {
+  --primary: #1E293B;
+  --primary-rgb: 30, 41, 59;
+  --secondary: #CBD5E1;
+  --secondary-rgb: 203, 213, 225;
+  --accent: #2DD4BF;
+  --accent-rgb: 45, 212, 191;
+  --text: #0F172A;
+  --text-muted: #334155;
+  --background: #F8FAFC;
+  --surface: #FFFFFF;
+  --border: #E2E8F0;
+  --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  --hologram-gradient: linear-gradient(45deg, transparent, rgba(45, 212, 191, 0.2), transparent);
+  --hologram-glow: 0 0 15px rgba(30, 41, 59, 0.3);
+  --navbar-bg: rgba(255, 255, 255, 0.95);
+  --footer-bg: #334155;
+  --footer-text: #F8FAFC;
+  --footer-text-muted: #eaeaea;
+}
+
+/* Scheme2 Dark */
+[data-theme="scheme2"][data-mode="dark"] {
+  --primary: #334155;
+  --primary-rgb: 51, 65, 85;
+  --secondary: #94A3B8;
+  --secondary-rgb: 148, 163, 184;
+  --accent: #5EEAD4;
+  --accent-rgb: 94, 234, 212;
+  --text: #F1F5F9;
+  --text-muted: #CBD5E1;
+  --background: #0F172A;
+  --surface: #1E293B;
+  --border: #334155;
+  --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+  --hologram-gradient: linear-gradient(45deg, transparent, rgba(94, 234, 212, 0.3), transparent);
+  --hologram-glow: 0 0 20px rgba(51, 65, 85, 0.6);
+  --navbar-bg: rgba(30, 41, 59, 0.95);
+  --footer-bg: #0F172A;
+  --footer-text: #F1F5F9;
+  --footer-text-muted: #94A3B8;
+}
+
+/* ===== BASE STYLES ===== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color: var(--text);
+  background-color: var(--background);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Remove focus outlines for mouse users, keep for keyboard */
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Image optimization */
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Smooth transitions for interactive elements */
+button, a {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Custom scrollbar - using theme colors */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--background);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--text-muted);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent);
+}
+
+/* ===== HOLOGRAPHIC EFFECT CLASSES ===== */
+.hologram-link {
+  position: relative;
+  display: inline-block;        /* Ensures pseudo-elements are positioned relative to content */
+  color: var(--text);           /* Base text color from theme */
+  transition: color 0.3s ease, text-shadow 0.3s ease;
+  text-decoration: none;        /* Remove default underline if any */
+}
+
+/* Double underline gradient effect */
+.hologram-link::after,
+.hologram-link::before {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(to right, var(--primary), var(--accent));
+  left: 0;
+  transform: scaleX(0);
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hologram-link::after {
+  bottom: -5px;                 /* Underline below text */
+  transform-origin: right;
+}
+
+.hologram-link::before {
+  top: -5px;                    /* Overline above text */
+  transform-origin: left;
+}
+
+.hologram-link:hover {
+  color: var(--accent);         /* Text changes to accent on hover */
+  /* text-shadow: 0 0 8px var(--accent);  -- gives glowing effect to the text*/ 
+}
+
+.hologram-link:hover::after,
+.hologram-link:hover::before {
+  transform: scaleX(1);
+}
+
+.hologram-btn {
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.hologram-btn::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    45deg,
+    transparent,
+    rgba(var(--accent-rgb), 0.2),
+    transparent
+  );
+  transform: rotate(-45deg) translateY(100%);
+  transition: transform 0.5s ease;
+  z-index: -1;
+}
+
+.hologram-btn:hover {
+  transform: scale(1.02);
+  box-shadow: var(--hologram-glow);
+}
+
+.hologram-btn:hover::before {
+  transform: rotate(-45deg) translateY(-100%);
+}
+
+/* For cards and containers */
+.hologram-card {
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hologram-card::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: var(--hologram-gradient);
+  transform: rotate(-45deg) translateY(100%);
+  transition: transform 0.6s ease;
+  z-index: -1;
+}
+
+.hologram-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--hologram-glow);
+}
+
+.hologram-card:hover::before {
+  transform: rotate(-45deg) translateY(-100%);
+}
+@keyframes blob {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(30px, -50px) scale(1.1); }
+  66% { transform: translate(-20px, 20px) scale(0.9); }
+}
+.animate-blob {
+  animation: blob 7s infinite;
+}
+.animation-delay-2000 {
+  animation-delay: 2s;
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-20px); }
+}
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite;
+}
+/* Ripple effect */
+.ripple {
+  position: relative;
+  overflow: hidden;
+}
+
+.ripple-effect {
+  position: absolute;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.6); /* Slightly more visible */
+  transform: scale(0);
+  animation: ripple-animation 0.8s ease-out; /* Slower, smoother */
+  pointer-events: none;
+  z-index: 10; /* Ensure it appears above content */
+}
+
+@keyframes ripple-animation {
+  0% {
+    transform: scale(0);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(0.3); /* Just enough to cover the element */
+    opacity: 0;
+  }
+}
