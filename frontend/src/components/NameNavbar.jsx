@@ -5,7 +5,7 @@ import { useTheme } from "../context/ThemeContext";
 
 function NameNavbar() {
   const [isOpen, setIsOpen] = useState(false);
-  const { theme, mode, toggleScheme, toggleMode } = useTheme();
+  const { mode, toggleScheme, toggleMode } = useTheme();
 
   const scrollToSection = (id) => {
     const el = document.getElementById(id);
@@ -16,14 +16,18 @@ function NameNavbar() {
   };
 
   return (
-    <nav className="sticky top-0 z-50 w-full border-b backdrop-blur"
-         style={{ backgroundColor: 'var(--navbar-bg)', borderColor: 'var(--border)' }}>
+    <nav
+      className="sticky top-0 z-50 w-full border-b backdrop-blur"
+      style={{ backgroundColor: 'var(--navbar-bg)', borderColor: 'var(--border)' }}
+    >
       <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
 
-        {/* Logo */}
+        {/* Logo – visible on all screens */}
         <Link to="/" className="flex items-center space-x-2">
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center"
-               style={{ backgroundColor: 'var(--primary)' }}>
+          <div
+            className="w-8 h-8 rounded-lg flex items-center justify-center"
+            style={{ backgroundColor: 'var(--primary)' }}
+          >
             <span className="text-white font-bold text-lg">P</span>
           </div>
           <span className="text-xl font-bold" style={{ color: 'var(--text)' }}>
@@ -31,7 +35,7 @@ function NameNavbar() {
           </span>
         </Link>
 
-        {/* Desktop Navigation */}
+        {/* Desktop Navigation (unchanged) */}
         <div className="hidden md:flex items-center space-x-8">
           <button
             onClick={() => scrollToSection("features")}
@@ -80,8 +84,8 @@ function NameNavbar() {
             <Link
               to="/register"
               className="px-4 py-2 rounded-lg hologram-btn font-medium"
-              style={{ 
-                backgroundColor: 'var(--primary)', 
+              style={{
+                backgroundColor: 'var(--primary)',
                 color: 'white'
               }}
             >
@@ -90,7 +94,7 @@ function NameNavbar() {
           </div>
         </div>
 
-        {/* Mobile toggle */}
+        {/* Mobile toggle and theme controls */}
         <div className="flex items-center space-x-2 md:hidden">
           <button
             onClick={toggleMode}
@@ -118,44 +122,35 @@ function NameNavbar() {
         </div>
       </div>
 
-      {/* Mobile Menu */}
+      {/* Mobile Menu – now using custom .mobile-nav-item */}
       {isOpen && (
-        <div className="md:hidden border-t" 
-             style={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)' }}>
-          <div className="px-6 py-4 space-y-4">
+        <div className="md:hidden border-t" style={{ borderColor: 'var(--border)' }}>
+          <div className="flex flex-col" style={{ backgroundColor: 'var(--surface)' }}>
             <button
               onClick={() => scrollToSection("features")}
-              className="block w-full text-left hologram-link px-3 py-2 rounded-md"
-              style={{ color: 'var(--text)' }}
+              className="mobile-nav-item"
             >
               Features
             </button>
-
             <button
               onClick={() => scrollToSection("how-it-works")}
-              className="block w-full text-left hologram-link px-3 py-2 rounded-md"
-              style={{ color: 'var(--text)' }}
+              className="mobile-nav-item"
             >
               How it works
             </button>
-
-            <div className="pt-4 border-t space-y-3" style={{ borderColor: 'var(--border)' }}>
+            {/* Auth links */}
+            <div className="border-t" style={{ borderColor: 'var(--border)' }}>
               <Link
                 to="/login"
                 onClick={() => setIsOpen(false)}
-                className="block text-center hologram-link px-3 py-2 rounded-md"
-                style={{ color: 'var(--text)' }}
+                className="mobile-nav-item"
               >
                 Sign In
               </Link>
               <Link
                 to="/register"
                 onClick={() => setIsOpen(false)}
-                className="block text-center px-4 py-2 rounded-lg hologram-btn font-medium"
-                style={{ 
-                  backgroundColor: 'var(--primary)', 
-                  color: 'white'
-                }}
+                className="mobile-nav-item"
               >
                 Sign Up Free
               </Link>

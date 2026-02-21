@@ -1,54 +1,53 @@
-import { useNavigate } from "react-router-dom"
+import { useNavigate } from "react-router-dom";
+import { Send, Inbox, PlusCircle, Briefcase, Menu } from "lucide-react";
 
 function DashboardSidebar({ activeView, onChange }) {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
   return (
-    <aside className="w-64 bg-white border-r min-h-[calc(100vh-64px)]">
-      <div className="p-4 space-y-2">
+    <aside className="dashboard-sidebar">
+      {/* Visual handle with sideways hamburger */}
+      <div className="sidebar-handle">
+        <Menu size={20} />
+      </div>
 
+      <div className="sidebar-content">
         <button
           onClick={() => onChange("outgoing")}
-          className={`w-full text-left px-4 py-2 rounded-md ${
-            activeView === "outgoing"
-              ? "bg-blue-50 text-blue-700 font-medium"
-              : "text-gray-700 hover:bg-gray-50"
-          }`}
+          className={`sidebar-item ${activeView === "outgoing" ? "primary-item active" : "primary-item"}`}
         >
-          My Requests {/* Outgoing Requests */}
+          <Send size={20} className="mr-3 flex-shrink-0" />
+          <span className="sidebar-item-text">My Requests</span>
         </button>
 
         <button
           onClick={() => onChange("incoming")}
-          className={`w-full text-left px-4 py-2 rounded-md ${
-            activeView === "incoming"
-              ? "bg-blue-50 text-blue-700 font-medium"
-              : "text-gray-700 hover:bg-gray-50"
-          }`}
+          className={`sidebar-item ${activeView === "incoming" ? "accent-item active" : "accent-item"}`}
         >
-          My Projects {/* Incoming Requests */}
+          <Inbox size={20} className="mr-3 flex-shrink-0" />
+          <span className="sidebar-item-text">My Projects</span>
         </button>
 
-        <div className="border-t my-3" />
+        <div className="border-t my-3" style={{ borderColor: 'var(--border)' }} />
 
-        {/* Create Project */}
         <button
           onClick={() => navigate("/create-project?from=dashboard")}
-          className="block w-full text-left px-4 py-2 rounded-md text-gray-700 hover:bg-gray-50"
+          className="sidebar-item secondary-item"
         >
-          Create Project
+          <PlusCircle size={20} className="mr-3 flex-shrink-0" />
+          <span className="sidebar-item-text">Create Project</span>
         </button>
 
-        {/* Create Internship */}
         <button
           onClick={() => navigate("/create-internship?from=dashboard")}
-          className="block w-full text-left px-4 py-2 rounded-md text-gray-700 hover:bg-gray-50"
+          className="sidebar-item primary-item"
         >
-          Create Internship
+          <Briefcase size={20} className="mr-3 flex-shrink-0" />
+          <span className="sidebar-item-text">Create Internship</span>
         </button>
       </div>
     </aside>
-  )
+  );
 }
 
-export default DashboardSidebar
+export default DashboardSidebar;

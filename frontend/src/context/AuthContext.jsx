@@ -28,8 +28,8 @@ export function AuthProvider({ children }) {
         return res.json()
       })
       .then((userData) => {
-        setUser(userData)
-        localStorage.setItem("user", JSON.stringify(userData))
+        setUser(userData.user)
+        localStorage.setItem("user", JSON.stringify(userData.user))
       })
       .catch(() => {
         localStorage.removeItem("token")
